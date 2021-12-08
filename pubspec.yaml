@@ -38,7 +38,6 @@ dependencies:
   flutter_iconpicker: ^3.0.4
   percent_indicator: ^3.4.0
   sqflite: ^2.0.0+4
-  shimmer: ^2.0.0
 
 dev_dependencies:
   flutter_test:

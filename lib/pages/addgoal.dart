@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_iconpicker/flutter_iconpicker.dart';
 import 'package:moneygoals/models/goals.dart';
-import 'package:moneygoals/pages/home.dart';
 import 'package:moneygoals/providers/database.dart';
 import 'package:intl/intl.dart';
 
@@ -13,9 +12,8 @@ class addgoal extends StatefulWidget {
 }
 
 class _addgoalState extends State<addgoal> {
-  List<TextEditingController> _controller =
+  final List<TextEditingController> _controller =
       List.generate(4, (i) => TextEditingController());
-  final DateFormat formatter = DateFormat('yyyy-MM-dd');
 
   @override
   Widget build(BuildContext context) {
@@ -45,7 +43,7 @@ class _addgoalState extends State<addgoal> {
               Stack(children: [
                 Container(
                     width: MediaQuery.of(context).size.width,
-                    height: MediaQuery.of(context).size.height - 270,
+                    height: MediaQuery.of(context).size.height,
                     decoration: const BoxDecoration(
                         borderRadius:
                             BorderRadius.only(topLeft: Radius.circular(50)),
@@ -93,7 +91,8 @@ class _addgoalState extends State<addgoal> {
         locale: const Locale('ru'));
     if (picked != null) {
       setState(() {
-        _controller[2].text = formatter.format(picked).toString();
+        _controller[2].text =
+            DateFormat('yyyy-MM-dd').format(picked).toString();
       });
     }
   }
@@ -128,7 +127,7 @@ class _addgoalState extends State<addgoal> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              SizedBox(height: 45),
+              SizedBox(height: MediaQuery.of(context).size.height * .1),
               ElevatedButton(
                   style: ElevatedButton.styleFrom(
                       elevation: 15,
@@ -156,8 +155,8 @@ class _addgoalState extends State<addgoal> {
   }
 
   Text inputRowName(String name) {
-    return Text('$name',
-        style: TextStyle(
+    return Text(name,
+        style: const TextStyle(
             color: Color(0xFFB4B7BD),
             fontSize: 17,
             fontWeight: FontWeight.bold));
@@ -179,9 +178,9 @@ class _addgoalState extends State<addgoal> {
               () => _nothing();
           }
         },
-        decoration: new InputDecoration.collapsed(
-            hintText: '$hint...', hintStyle: TextStyle(fontSize: 16)),
-        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18));
+        decoration: InputDecoration.collapsed(
+            hintText: '$hint...', hintStyle: const TextStyle(fontSize: 16)),
+        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18));
   }
 
   void _createGoal() {
@@ -191,6 +190,7 @@ class _addgoalState extends State<addgoal> {
         date: _controller[2].text,
         icon: _controller[3].text,
         status: 0));
+    // Необходимо внедрить проверку на пустые поля
     Navigator.pop(context);
   }
 }

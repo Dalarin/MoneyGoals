@@ -96,7 +96,7 @@ class DBHelper {
 
   Future<int> deleteGoal(int id) async {
     final db = await instance.database;
-
+    deleteContributions(id);
     return await db.delete(
       goal_tablename,
       where: '${GoalsFields.id} = ?',
@@ -114,10 +114,22 @@ class DBHelper {
     );
   }
 
+  Future<int> deleteContributions(int idGoal) async {
+    final db = await instance.database;
+
+    return await db.delete(
+      contributions_tablename,
+      where: '${ContributionsFields.id_goal} = ?',
+      whereArgs: [idGoal],
+    );
+  }
+
   Future<List<Contributions>> readAllContributions(int id_goal) async {
     final db = await instance.database;
     final result = await db.query(contributions_tablename,
-        where: '${ContributionsFields.id_goal} = ?', whereArgs: [id_goal]);
+        where: '${ContributionsFields.id_goal} = ?',
+        whereArgs: [id_goal],
+        orderBy: '${ContributionsFields.date} DESC');
     return result.map((json) => Contributions.fromJson(json)).toList();
   }
 

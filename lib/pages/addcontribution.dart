@@ -44,6 +44,7 @@ class _addcontributionState extends State<addcontribution> {
             style: TextStyle(color: Color(0xFF897BF2))),
       ),
       body: SafeArea(
+        bottom: false,
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
           child: Column(
@@ -58,7 +59,7 @@ class _addcontributionState extends State<addcontribution> {
               Stack(children: [
                 Container(
                     width: MediaQuery.of(context).size.width,
-                    height: MediaQuery.of(context).size.height - 270,
+                    height: MediaQuery.of(context).size.height,
                     decoration: const BoxDecoration(
                         borderRadius:
                             BorderRadius.only(topLeft: Radius.circular(50)),
@@ -140,7 +141,7 @@ class _addcontributionState extends State<addcontribution> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              SizedBox(height: 45),
+              SizedBox(height: MediaQuery.of(context).size.height * .1),
               ElevatedButton(
                   style: ElevatedButton.styleFrom(
                       elevation: 15,

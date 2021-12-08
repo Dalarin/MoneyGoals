@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:moneygoals/pages/addgoal.dart';
-import 'package:moneygoals/pages/goal.dart';
 import 'package:moneygoals/pages/home.dart';
+
+import 'models/goals.dart';
 
 void main() => runApp(MaterialApp(
       localizationsDelegates: const [
@@ -10,11 +11,11 @@ void main() => runApp(MaterialApp(
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate
       ],
-      supportedLocales: [const Locale('ru', 'RU')],
+      supportedLocales: const [Locale('ru', 'RU')],
       title: 'Money Goals',
       initialRoute: '/home',
       routes: {
-        '/home': (context) => Home(),
+        '/home': (context) => const Home(),
         '/addGoal': (context) => addgoal(),
       },
     ));
