@@ -61,7 +61,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.push(
-              context, MaterialPageRoute(builder: (context) => addgoal()));
+                  context, MaterialPageRoute(builder: (context) => addgoal()))
+              .then((value) => setState(() {}));
         },
         child: Icon(Icons.add),
         backgroundColor: Color(0xFF442BEB),
