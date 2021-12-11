@@ -6,11 +6,9 @@ import 'package:percent_indicator/percent_indicator.dart';
 import 'package:moneygoals/providers/database.dart';
 import 'package:intl/intl.dart';
 
-import 'package:shimmer/shimmer.dart';
-
 class Goalpage extends StatefulWidget {
   late Goals _goal;
-  Goalpage({Key? key, required Goals goal}) {
+  Goalpage({Key? key, required Goals goal}) : super(key: key) {
     _goal = goal;
   }
 
@@ -28,17 +26,17 @@ class _GoalpageState extends State<Goalpage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        backgroundColor: Color(0xFFE9EBF1),
+        backgroundColor: const Color(0xFFE9EBF1),
         appBar: AppBar(
           actions: [
             PopupMenuButton(
-                icon: Icon(Icons.more_vert_outlined),
+                icon: const Icon(Icons.more_vert_outlined),
                 itemBuilder: (_) => <PopupMenuItem<String>>[
-                      PopupMenuItem<String>(
+                      const PopupMenuItem<String>(
                         child: Text('Удалить'),
                         value: 'Delete',
                       ),
-                      PopupMenuItem<String>(
+                      const PopupMenuItem<String>(
                           child: Text('Редактировать'), value: 'Edit'),
                     ],
                 onSelected: (String value) {
@@ -47,8 +45,8 @@ class _GoalpageState extends State<Goalpage> {
                       : null;
                 }),
           ],
-          iconTheme: IconThemeData(color: Colors.black),
-          backgroundColor: Color(0xFFFC9C9F),
+          iconTheme: const IconThemeData(color: Colors.black),
+          backgroundColor: const Color(0xFFFC9C9F),
           elevation: 0.0,
           title: const Text('Ваша цель', style: TextStyle(color: Colors.black)),
           centerTitle: true,
@@ -63,7 +61,7 @@ class _GoalpageState extends State<Goalpage> {
                   child: Column(
                     children: [
                       Container(
-                        padding: EdgeInsets.symmetric(vertical: 15),
+                        padding: const EdgeInsets.symmetric(vertical: 15),
                         width: MediaQuery.of(context).size.width,
                         height: MediaQuery.of(context).size.height * .25,
                         decoration: const BoxDecoration(
@@ -80,12 +78,14 @@ class _GoalpageState extends State<Goalpage> {
                                   width: MediaQuery.of(context).size.width - 45,
                                   decoration: BoxDecoration(
                                       borderRadius: BorderRadius.circular(20),
-                                      color: Color(0xFF272231)),
+                                      color: const Color(0xFF272231)),
                                   child: Container(
                                       child: Column(children: [
                                     containerRow(),
-                                    indicatorRow(widget._goal,
-                                        int.parse(widget._goal.amount)),
+                                    indicatorRow(
+                                        widget._goal,
+                                        int.parse(widget._goal
+                                            .amount)), // <----- здесь проблема
                                   ])))
                             ]),
                       ),
@@ -240,8 +240,10 @@ class _GoalpageState extends State<Goalpage> {
   FutureBuilder indicatorRow(Goals goals, int goalMoney) {
     return FutureBuilder(
         future: DBHelper.instance.readAllAmountContributions(goals.id!),
-        builder: (context, snapshot) {
-          var contributions = (snapshot.data as List) as List<Contributions>;
+        builder: (context, AsyncSnapshot snapshot) {
+          var contributions =
+              (snapshot.data ?? [] as List).cast<Contributions>();
+          debugPrint(snapshot.data.toString());
           return Column(children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -257,9 +259,10 @@ class _GoalpageState extends State<Goalpage> {
                       backgroundColor: const Color(0xFFE9EBF1),
                       animationDuration: 2000,
                       center: Text(
-                          '${(countContribution(contributions) / goalMoney) * 100} %',
+                          '${((countContribution(contributions) / goalMoney) * 100).toStringAsFixed(3)} %',
                           style: const TextStyle(fontSize: 13)),
-                      percent: countContribution(contributions) / goalMoney,
+                      percent:
+                          (countContribution(contributions) / goalMoney).abs(),
                       restartAnimation: true,
                       linearStrokeCap: LinearStrokeCap.roundAll,
                       progressColor: const Color(0xFF442BEB),
@@ -309,12 +312,12 @@ class _GoalpageState extends State<Goalpage> {
 
   showAlertDialog(BuildContext context, int goalID) {
     Widget cancelButton = TextButton(
-        child: Text("Отменить"),
+        child: const Text("Отменить"),
         onPressed: () {
           Navigator.pop(context);
         });
     Widget continueButton = TextButton(
-        child: Text("Ок"),
+        child: const Text("Ок"),
         onPressed: () {
           DBHelper.instance.deleteGoal(goalID);
           Navigator.pop(context);
@@ -322,8 +325,8 @@ class _GoalpageState extends State<Goalpage> {
         });
 
     AlertDialog alert = AlertDialog(
-      title: Text("Удаление"),
-      content: Text("Вы уверены, что хотите удалить цель?"),
+      title: const Text("Удаление"),
+      content: const Text("Вы уверены, что хотите удалить цель?"),
       actions: [cancelButton, continueButton],
     );
     showDialog(

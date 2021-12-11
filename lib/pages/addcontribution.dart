@@ -12,17 +12,12 @@ class addcontribution extends StatefulWidget {
   }
 
   @override
-  _addcontributionState createState() => _addcontributionState(idGoal);
+  _addcontributionState createState() => _addcontributionState();
 }
 
 class _addcontributionState extends State<addcontribution> {
-  late int idGoal;
-  List<TextEditingController> _controller =
+  final List<TextEditingController> _controller =
       List.generate(4, (i) => TextEditingController());
-
-  _addcontributionState(int idGoal) {
-    this.idGoal = idGoal;
-  }
 
   @override
   void initState() {
@@ -113,7 +108,7 @@ class _addcontributionState extends State<addcontribution> {
 
   void _createOperation() {
     DBHelper.instance.createContribution(Contributions(
-        id_goal: idGoal,
+        id_goal: widget.idGoal,
         amount: _controller[1].text,
         comment: _controller[0].text,
         date: _controller[2].text));
@@ -169,8 +164,8 @@ class _addcontributionState extends State<addcontribution> {
   }
 
   Text inputRowName(String name) {
-    return Text('$name',
-        style: TextStyle(
+    return Text(name,
+        style: const TextStyle(
             color: Color(0xFFB4B7BD),
             fontSize: 17,
             fontWeight: FontWeight.bold));
@@ -183,8 +178,8 @@ class _addcontributionState extends State<addcontribution> {
         onTap: () {
           operationType == 2 ? _pickDate() : null;
         },
-        decoration: new InputDecoration.collapsed(
-            hintText: '$hint...', hintStyle: TextStyle(fontSize: 16)),
-        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18));
+        decoration: InputDecoration.collapsed(
+            hintText: '$hint...', hintStyle: const TextStyle(fontSize: 16)),
+        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18));
   }
 }

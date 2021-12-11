@@ -55,18 +55,20 @@ class _addgoalState extends State<addgoal> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             inputRowName('Название цели'),
-                            inputRow(
-                                "Введите название цели", 0, _controller[0]),
-                            SizedBox(height: 40),
+                            inputRow("Введите название цели", 0, _controller[0],
+                                false),
+                            const SizedBox(height: 40),
                             inputRowName('Сумма цели'),
-                            inputRow('Введите сумму цели', 0, _controller[1]),
+                            inputRow(
+                                'Введите сумму цели', 0, _controller[1], false),
                             const SizedBox(height: 40),
                             inputRowName('Дата достижения цели'),
                             inputRow('Выберите дату достижения цели', 2,
-                                _controller[2]),
-                            SizedBox(height: 40),
+                                _controller[2], true),
+                            const SizedBox(height: 40),
                             inputRowName('Иконка цели'),
-                            inputRow('Выберите иконку', 3, _controller[3]),
+                            inputRow(
+                                'Выберите иконку', 3, _controller[3], true),
                           ],
                         ))),
                 buttonContainer()
@@ -162,9 +164,10 @@ class _addgoalState extends State<addgoal> {
             fontWeight: FontWeight.bold));
   }
 
-  TextField inputRow(
-      String hint, int operationType, TextEditingController _controller) {
+  TextField inputRow(String hint, int operationType,
+      TextEditingController _controller, bool _isEditable) {
     return TextField(
+        readOnly: _isEditable,
         controller: _controller,
         onTap: () {
           switch (operationType) {

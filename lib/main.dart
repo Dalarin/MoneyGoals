@@ -3,8 +3,6 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:moneygoals/pages/addgoal.dart';
 import 'package:moneygoals/pages/home.dart';
 
-import 'models/goals.dart';
-
 void main() => runApp(MaterialApp(
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,

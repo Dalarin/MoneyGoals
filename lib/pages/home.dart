@@ -6,7 +6,6 @@ import 'package:percent_indicator/percent_indicator.dart';
 import 'package:moneygoals/models/goals.dart';
 import 'package:moneygoals/providers/database.dart';
 import 'package:intl/intl.dart';
-import 'package:shimmer/shimmer.dart';
 
 class Home extends StatefulWidget {
   const Home({Key? key}) : super(key: key);
@@ -16,7 +15,6 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> with TickerProviderStateMixin {
-  int _amountGoal = 0;
   var loading = true;
   @override
   void initState() {
@@ -43,7 +41,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                 .then((value) => setState(() {}));
           },
           child: const Icon(Icons.add),
-          backgroundColor: Color(0xFF442BEB),
+          backgroundColor: const Color(0xFF442BEB),
         ),
         backgroundColor: const Color(0xFFE9EBF1),
         body: FutureBuilder(
@@ -64,54 +62,61 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                         header(contributions),
                         goalsRow(),
                         Container(
-                          height: MediaQuery.of(context).size.height,
-                          width: MediaQuery.of(context).size.width - 45,
-                          child: ListView.separated(
-                            physics: BouncingScrollPhysics(),
-                            itemCount: goals.length,
-                            separatorBuilder:
-                                (BuildContext context, int index) {
-                              return const SizedBox(height: 15);
-                            },
-                            itemBuilder: (BuildContext context, int index) {
-                              return InkWell(
-                                  onTap: () => Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                          builder: (context) =>
-                                              Goalpage(goal: goals[index]))),
-                                  child: Container(
-                                      height: 135,
-                                      width: MediaQuery.of(context).size.width -
-                                          45,
-                                      decoration: BoxDecoration(
-                                          borderRadius:
-                                              BorderRadius.circular(20),
-                                          color: Colors.white),
-                                      child: Container(
-                                        child: Column(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.start,
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            containerRow(goals[index]),
-                                            indicatorRow(
-                                                goals,
-                                                int.parse(goals[index].amount),
-                                                index),
-                                          ],
-                                        ),
-                                      )));
-                            },
-                          ),
-                        ),
+                            height: MediaQuery.of(context).size.height,
+                            width: MediaQuery.of(context).size.width - 45,
+                            child: goals.length != 0
+                                ? ListView.separated(
+                                    physics: const BouncingScrollPhysics(),
+                                    itemCount: goals.length,
+                                    separatorBuilder:
+                                        (BuildContext context, int index) {
+                                      return const SizedBox(height: 15);
+                                    },
+                                    itemBuilder:
+                                        (BuildContext context, int index) {
+                                      return InkWell(
+                                          onTap: () => Navigator.push(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                      builder: (context) =>
+                                                          Goalpage(
+                                                              goal: goals[index])))
+                                              .then((value) => setState(() {})),
+                                          child: Container(
+                                              height: 135,
+                                              width: MediaQuery.of(context)
+                                                      .size
+                                                      .width -
+                                                  45,
+                                              decoration: BoxDecoration(
+                                                  borderRadius:
+                                                      BorderRadius.circular(20),
+                                                  color: Colors.white),
+                                              child: Container(
+                                                child: Column(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.start,
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    containerRow(goals[index]),
+                                                    indicatorRow(
+                                                        goals,
+                                                        int.parse(goals[index]
+                                                            .amount),
+                                                        index),
+                                                  ],
+                                                ),
+                                              )));
+                                    },
+                                  )
+                                : imageContainer()),
                       ],
                     ),
                   ),
                 );
               } else {
-                return Column(children: [Text('hello world')]);
+                return const Center(child: CircularProgressIndicator());
               }
             }));
   }
@@ -126,6 +131,20 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
     } else {
       return 0;
     }
+  }
+
+  Container imageContainer() {
+    return Container(
+        width: MediaQuery.of(context).size.width,
+        height: MediaQuery.of(context).size.height * 0.47,
+        child: Column(children: [
+          Image.asset('assets/nothing.png'),
+          const Text('Ничего нет...',
+              style: TextStyle(
+                  fontWeight: FontWeight.w500,
+                  fontSize: 17,
+                  fontStyle: FontStyle.italic))
+        ]));
   }
 
   int sumContributions(List<Contributions> contributions) {
@@ -145,7 +164,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
         showSelectedLabels: false,
         showUnselectedLabels: false,
         currentIndex: 0,
-        selectedItemColor: Color(0xFF442BEB),
+        selectedItemColor: const Color(0xFF442BEB),
         elevation: 15.0,
         items: const [
           BottomNavigationBarItem(
@@ -177,9 +196,10 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                       backgroundColor: const Color(0xFFE9EBF1),
                       animationDuration: 2000,
                       center: Text(
-                          '${(countContribution(contributions) / goalMoney) * 100} %',
+                          '${((countContribution(contributions) / goalMoney) * 100).toStringAsFixed(3)} %',
                           style: const TextStyle(fontSize: 13)),
-                      percent: countContribution(contributions) / goalMoney,
+                      percent:
+                          (countContribution(contributions) / goalMoney).abs(),
                       restartAnimation: true,
                       linearStrokeCap: LinearStrokeCap.roundAll,
                       progressColor: const Color(0xFF442BEB),
@@ -219,7 +239,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
               height: 45,
               decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(15),
-                  color: Color(0xFFEAEDF5)),
+                  color: const Color(0xFFEAEDF5)),
               child: Icon(
                   IconData(int.parse(goals.icon),
                       fontFamily: 'LineAwesomeIcons',
@@ -257,7 +277,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
           Padding(
               padding: const EdgeInsets.only(left: 85),
               child: TabBar(
-                  indicatorColor: Color(0xFF442BEB),
+                  indicatorColor: const Color(0xFF442BEB),
                   indicatorWeight: 3.5,
                   labelStyle: const TextStyle(fontWeight: FontWeight.bold),
                   indicatorSize: TabBarIndicatorSize.label,

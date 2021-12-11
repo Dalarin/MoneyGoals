@@ -152,7 +152,6 @@ class DBHelper {
   Future<Contributions> createContribution(Contributions contributions) async {
     final db = await instance.database;
     final id = await db.insert(contributions_tablename, contributions.toJson());
-    print('Goal successfully created');
     return contributions.copy(id: id);
   }
 

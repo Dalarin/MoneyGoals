@@ -1,12 +1,12 @@
-final String contributions_tablename = "Contributions";
+const String contributions_tablename = "Contributions";
 
 class ContributionsFields {
   static final List<String> values = [id, id_goal, amount, comment, date];
-  static final String id = 'id';
-  static final String id_goal = 'id_goal';
-  static final String amount = 'amount';
-  static final String comment = 'comment';
-  static final String date = 'date';
+  static const String id = 'id';
+  static const String id_goal = 'id_goal';
+  static const String amount = 'amount';
+  static const String comment = 'comment';
+  static const String date = 'date';
 }
 
 class Contributions {
