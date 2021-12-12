@@ -12,7 +12,6 @@ class DBHelper {
 
   Future<Database> get database async {
     if (_database != null) return _database!;
-
     _database = await _initDB('goals.db');
     return _database!;
   }
@@ -20,7 +19,6 @@ class DBHelper {
   Future<Database> _initDB(String filePath) async {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, filePath);
-
     return await openDatabase(path, version: 1, onCreate: _createDB);
   }
 
@@ -54,7 +52,6 @@ class DBHelper {
   Future<Goals> createGoal(Goals goals) async {
     final db = await instance.database;
     final id = await db.insert(goal_tablename, goals.toJson());
-    print('Goal successfully created');
     return goals.copy(id: id);
   }
 
@@ -77,9 +74,7 @@ class DBHelper {
 
   Future<List<Goals>> readAllGoals() async {
     final db = await instance.database;
-
     final result = await db.query(goal_tablename);
-
     return result.map((json) => Goals.fromJson(json)).toList();
   }
 
@@ -106,7 +101,6 @@ class DBHelper {
 
   Future<int> deleteContribution(int id) async {
     final db = await instance.database;
-
     return await db.delete(
       contributions_tablename,
       where: '${ContributionsFields.id} = ?',
@@ -116,7 +110,6 @@ class DBHelper {
 
   Future<int> deleteContributions(int idGoal) async {
     final db = await instance.database;
-
     return await db.delete(
       contributions_tablename,
       where: '${ContributionsFields.id_goal} = ?',
@@ -133,19 +126,9 @@ class DBHelper {
     return result.map((json) => Contributions.fromJson(json)).toList();
   }
 
-  Future<List<Contributions>> readAllAmountContributions(int id_goal) async {
-    final db = await instance.database;
-    final result = await db.query(contributions_tablename,
-        where: '${ContributionsFields.id_goal} = ?',
-        whereArgs: [id_goal],
-        columns: [ContributionsFields.amount]);
-    return result.map((json) => Contributions.fromJson(json)).toList();
-  }
-
   Future<List<Contributions>> readAllAmountContributionsID() async {
     final db = await instance.database;
-    final result = await db
-        .query(contributions_tablename, columns: [ContributionsFields.amount]);
+    final result = await db.query(contributions_tablename);
     return result.map((json) => Contributions.fromJson(json)).toList();
   }
 

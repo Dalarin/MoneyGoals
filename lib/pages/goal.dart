@@ -17,12 +17,6 @@ class Goalpage extends StatefulWidget {
 }
 
 class _GoalpageState extends State<Goalpage> {
-  bool loading = false;
-  @override
-  void initState() {
-    super.initState();
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -84,6 +78,7 @@ class _GoalpageState extends State<Goalpage> {
                                     containerRow(),
                                     indicatorRow(
                                         widget._goal,
+                                        contributions,
                                         int.parse(widget._goal
                                             .amount)), // <----- здесь проблема
                                   ])))
@@ -148,7 +143,7 @@ class _GoalpageState extends State<Goalpage> {
           itemCount: contributions.length,
           itemBuilder: (BuildContext context, int index) {
             return Container(
-              height: MediaQuery.of(context).size.height * 0.12,
+              height: MediaQuery.of(context).size.height * 0.1,
               width: (MediaQuery.of(context).size.width * 0.37) / 3,
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
@@ -175,7 +170,7 @@ class _GoalpageState extends State<Goalpage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Container(
-                          width: MediaQuery.of(context).size.width * 0.35,
+                          width: MediaQuery.of(context).size.width * .35,
                           child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -237,42 +232,39 @@ class _GoalpageState extends State<Goalpage> {
     );
   }
 
-  FutureBuilder indicatorRow(Goals goals, int goalMoney) {
-    return FutureBuilder(
-        future: DBHelper.instance.readAllAmountContributions(goals.id!),
-        builder: (context, AsyncSnapshot snapshot) {
-          var contributions =
-              (snapshot.data ?? [] as List).cast<Contributions>();
-          debugPrint(snapshot.data.toString());
-          return Column(children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                    alignment: Alignment.center,
-                    height: 15,
-                    width: 300,
-                    child: LinearPercentIndicator(
-                      width: MediaQuery.of(context).size.width - 94,
-                      animation: true,
-                      lineHeight: 13.0,
-                      backgroundColor: const Color(0xFFE9EBF1),
-                      animationDuration: 2000,
-                      center: Text(
-                          '${((countContribution(contributions) / goalMoney) * 100).toStringAsFixed(3)} %',
-                          style: const TextStyle(fontSize: 13)),
-                      percent:
-                          (countContribution(contributions) / goalMoney).abs(),
-                      restartAnimation: true,
-                      linearStrokeCap: LinearStrokeCap.roundAll,
-                      progressColor: const Color(0xFF442BEB),
-                    )),
-              ],
-            ),
-            underIndicatorRow(countContribution(contributions).toString(),
-                NumberFormat.decimalPattern().format(int.parse(goals.amount)))
-          ]);
-        });
+  FutureBuilder indicatorRow(
+      Goals goals, List<Contributions> _contributions, int goalMoney) {
+    return FutureBuilder(builder: (context, AsyncSnapshot snapshot) {
+      var contributions = (snapshot.data ?? [] as List).cast<Contributions>();
+      return Column(children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+                alignment: Alignment.center,
+                height: 15,
+                width: 300,
+                child: LinearPercentIndicator(
+                  width: MediaQuery.of(context).size.width - 94,
+                  animation: true,
+                  lineHeight: 13.0,
+                  backgroundColor: const Color(0xFFE9EBF1),
+                  animationDuration: 2000,
+                  center: Text(
+                      '${((countContribution(_contributions) / goalMoney) * 100).toStringAsFixed(3)} %',
+                      style: const TextStyle(fontSize: 13)),
+                  percent:
+                      (countContribution(_contributions) / goalMoney).abs(),
+                  restartAnimation: true,
+                  linearStrokeCap: LinearStrokeCap.roundAll,
+                  progressColor: const Color(0xFF442BEB),
+                )),
+          ],
+        ),
+        underIndicatorRow(countContribution(_contributions).toString(),
+            NumberFormat.decimalPattern().format(int.parse(goals.amount)))
+      ]);
+    });
   }
 
   int countContribution(List<Contributions> contributions) {

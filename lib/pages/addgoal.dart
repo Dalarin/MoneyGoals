@@ -186,14 +186,15 @@ class _addgoalState extends State<addgoal> {
         style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18));
   }
 
-  void _createGoal() {
-    DBHelper.instance.createGoal(Goals(
-        title: _controller[0].text,
-        amount: _controller[1].text,
-        date: _controller[2].text,
-        icon: _controller[3].text,
-        status: 0));
+  Future<void> _createGoal() async {
+    await DBHelper.instance
+        .createGoal(Goals(
+            title: _controller[0].text,
+            amount: _controller[1].text,
+            date: _controller[2].text,
+            icon: _controller[3].text,
+            status: 0))
+        .whenComplete(() => Navigator.pop(context));
     // Необходимо внедрить проверку на пустые поля
-    Navigator.pop(context);
   }
 }

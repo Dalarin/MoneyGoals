@@ -106,13 +106,15 @@ class _addcontributionState extends State<addcontribution> {
     }
   }
 
-  void _createOperation() {
-    DBHelper.instance.createContribution(Contributions(
-        id_goal: widget.idGoal,
-        amount: _controller[1].text,
-        comment: _controller[0].text,
-        date: _controller[2].text));
-    Navigator.pop(context);
+  Future<void> _createOperation() async {
+    await DBHelper.instance
+        .createContribution(Contributions(
+            id_goal: widget.idGoal,
+            amount: _controller[1].text,
+            comment: _controller[0].text,
+            date: _controller[2].text))
+        .whenComplete(() => Navigator.pop(context));
+    ;
   }
   // void _createGoal() {
   //   DBHelper.instance.createContribution(Co(

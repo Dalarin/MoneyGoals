@@ -15,12 +15,6 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> with TickerProviderStateMixin {
-  var loading = true;
-  @override
-  void initState() {
-    super.initState();
-  }
-
   @override
   void dispose() {
     super.dispose();
@@ -50,6 +44,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
               DBHelper.instance.readAllAmountContributionsID()
             ]),
             builder: (context, AsyncSnapshot<List<dynamic>> snapshot) {
+              debugPrint(snapshot.toString());
               if (snapshot.hasData) {
                 var goals = (snapshot.data as List)[0] as List<Goals>;
                 var contributions =
@@ -76,12 +71,11 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                         (BuildContext context, int index) {
                                       return InkWell(
                                           onTap: () => Navigator.push(
-                                                  context,
-                                                  MaterialPageRoute(
-                                                      builder: (context) =>
-                                                          Goalpage(
-                                                              goal: goals[index])))
-                                              .then((value) => setState(() {})),
+                                              context,
+                                              MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      Goalpage(
+                                                          goal: goals[index]))),
                                           child: Container(
                                               height: 135,
                                               width: MediaQuery.of(context)
@@ -101,10 +95,10 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                                                   children: [
                                                     containerRow(goals[index]),
                                                     indicatorRow(
-                                                        goals,
+                                                        goals[index],
                                                         int.parse(goals[index]
                                                             .amount),
-                                                        index),
+                                                        contributions),
                                                   ],
                                                 ),
                                               )));
@@ -147,14 +141,6 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
         ]));
   }
 
-  int sumContributions(List<Contributions> contributions) {
-    int sum = 0;
-    for (int i = 0; i < contributions.length; i++) {
-      sum += int.parse(contributions[i].amount);
-    }
-    return sum;
-  }
-
   BottomAppBar bottomAppBar() {
     return BottomAppBar(
       shape: const CircularNotchedRectangle(),
@@ -176,42 +162,44 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
     );
   }
 
-  FutureBuilder indicatorRow(List<Goals> goals, int goalMoney, int index) {
-    return FutureBuilder(
-        future: DBHelper.instance.readAllAmountContributions(goals[index].id!),
-        builder: (context, snapshot) {
-          var contributions = (snapshot.data as List) as List<Contributions>;
-          return Column(children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                    alignment: Alignment.center,
-                    height: 15,
-                    width: 300,
-                    child: LinearPercentIndicator(
-                      width: MediaQuery.of(context).size.width - 94,
-                      animation: true,
-                      lineHeight: 13.0,
-                      backgroundColor: const Color(0xFFE9EBF1),
-                      animationDuration: 2000,
-                      center: Text(
-                          '${((countContribution(contributions) / goalMoney) * 100).toStringAsFixed(3)} %',
-                          style: const TextStyle(fontSize: 13)),
-                      percent:
-                          (countContribution(contributions) / goalMoney).abs(),
-                      restartAnimation: true,
-                      linearStrokeCap: LinearStrokeCap.roundAll,
-                      progressColor: const Color(0xFF442BEB),
-                    )),
-              ],
-            ),
-            underIndicatorRow(
-                countContribution(contributions).toString(),
-                NumberFormat.decimalPattern()
-                    .format(int.parse(goals[index].amount)))
-          ]);
-        });
+  List<Contributions> generateList(
+      List<Contributions> _contributions, Goals goal) {
+    return _contributions
+        .where((element) => element.id_goal == goal.id)
+        .toList();
+  }
+
+  Column indicatorRow(
+      Goals goals, int goalMoney, List<Contributions> _contributions) {
+    List<Contributions> _subContributions = generateList(_contributions, goals);
+    return Column(children: [
+      Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+              alignment: Alignment.center,
+              height: 15,
+              width: 300,
+              child: LinearPercentIndicator(
+                width: MediaQuery.of(context).size.width - 94,
+                animation: true,
+                lineHeight: 13.0,
+                backgroundColor: const Color(0xFFE9EBF1),
+                animationDuration: 2000,
+                center: Text(
+                    '${((countContribution(_subContributions) / goalMoney) * 100).toStringAsFixed(3)} %',
+                    style: const TextStyle(fontSize: 13)),
+                percent:
+                    (countContribution(_subContributions) / goalMoney).abs(),
+                restartAnimation: true,
+                linearStrokeCap: LinearStrokeCap.roundAll,
+                progressColor: const Color(0xFF442BEB),
+              )),
+        ],
+      ),
+      underIndicatorRow(countContribution(_subContributions).toString(),
+          NumberFormat.decimalPattern().format(int.parse(goals.amount)))
+    ]);
   }
 
   Row underIndicatorRow(String currentAmount, String goalAmount) {
@@ -308,7 +296,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
               children: [
                 const Icon(Icons.euro, color: Color(0xFF442BEB)),
                 const SizedBox(width: 5),
-                Text(sumContributions(contributions).toString(),
+                Text(countContribution(contributions).toString(),
                     style: const TextStyle(
                         fontWeight: FontWeight.bold, fontSize: 45))
               ],
