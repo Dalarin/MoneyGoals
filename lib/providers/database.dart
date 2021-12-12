@@ -78,15 +78,12 @@ class DBHelper {
     return result.map((json) => Goals.fromJson(json)).toList();
   }
 
-  Future<int> updateGoal(Goals goals) async {
+  Future<int> updateGoal(int status, int idGoal) async {
     final db = await instance.database;
 
-    return db.update(
-      goal_tablename,
-      goals.toJson(),
-      where: '${GoalsFields.id} = ?',
-      whereArgs: [goals.id],
-    );
+    return db.rawUpdate(
+        'UPDATE ${goal_tablename} SET ${GoalsFields.status} = ? WHERE ${GoalsFields.id} = ?',
+        [status, idGoal]);
   }
 
   Future<int> deleteGoal(int id) async {

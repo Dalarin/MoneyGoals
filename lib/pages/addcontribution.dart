@@ -2,14 +2,13 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:moneygoals/models/contributions.dart';
+import 'package:moneygoals/pages/congratulations.dart';
 import 'package:moneygoals/providers/database.dart';
 import 'package:intl/intl.dart';
 
 class addcontribution extends StatefulWidget {
-  late int idGoal;
-  addcontribution({Key? key, required int idGoal}) : super(key: key) {
-    this.idGoal = idGoal;
-  }
+  int idGoal, moneyAmount, goalAmount;
+  addcontribution(this.idGoal, this.moneyAmount, this.goalAmount);
 
   @override
   _addcontributionState createState() => _addcontributionState();
@@ -17,7 +16,8 @@ class addcontribution extends StatefulWidget {
 
 class _addcontributionState extends State<addcontribution> {
   final List<TextEditingController> _controller =
-      List.generate(4, (i) => TextEditingController());
+      List.generate(3, (i) => TextEditingController());
+  bool validate = false;
 
   @override
   void initState() {
@@ -67,15 +67,15 @@ class _addcontributionState extends State<addcontribution> {
                           children: [
                             inputRowName('Комментарий к операции'),
                             inputRow("Введите комментарий к операции", 0,
-                                _controller[0]),
-                            SizedBox(height: 40),
+                                _controller[0], TextInputType.text),
+                            const SizedBox(height: 40),
                             inputRowName('Сумма операции'),
-                            inputRow(
-                                'Введите сумму операции', 0, _controller[1]),
+                            inputRow('Введите сумму операции', 0,
+                                _controller[1], TextInputType.number),
                             const SizedBox(height: 40),
                             inputRowName('Дата операции'),
                             inputRow('Выберите дату проведения операции', 2,
-                                _controller[2]),
+                                _controller[2], TextInputType.none),
                           ],
                         ))),
                 buttonContainer()
@@ -93,10 +93,6 @@ class _addcontributionState extends State<addcontribution> {
         initialDate: DateTime.now(),
         firstDate: DateTime(2018),
         lastDate: DateTime(2045),
-        fieldHintText: 'Выберите дату',
-        helpText: 'Выберите дату',
-        cancelText: 'Отмена',
-        confirmText: 'OK',
         locale: const Locale('ru'));
     if (picked != null) {
       setState(() {
@@ -113,18 +109,19 @@ class _addcontributionState extends State<addcontribution> {
             amount: _controller[1].text,
             comment: _controller[0].text,
             date: _controller[2].text))
-        .whenComplete(() => Navigator.pop(context));
-    ;
+        .whenComplete(() => {
+              if (widget.moneyAmount + int.parse(_controller[1].text) >=
+                  widget.goalAmount)
+                {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => congratulations(widget.idGoal)))
+                }
+              else
+                {Navigator.pop(context)}
+            });
   }
-  // void _createGoal() {
-  //   DBHelper.instance.createContribution(Co(
-  //       title: _controller[0].text,
-  //       amount: _controller[1].text,
-  //       date: _controller[2].text,
-  //       icon: _controller[3].text,
-  //       status: 0));
-  //   Navigator.pop(context);
-  // }
 
   Positioned buttonContainer() {
     return Positioned(
@@ -138,7 +135,7 @@ class _addcontributionState extends State<addcontribution> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              SizedBox(height: MediaQuery.of(context).size.height * .1),
+              SizedBox(height: MediaQuery.of(context).size.height * .06),
               ElevatedButton(
                   style: ElevatedButton.styleFrom(
                       elevation: 15,
@@ -149,7 +146,7 @@ class _addcontributionState extends State<addcontribution> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(15.0),
                       )),
-                  onPressed: () => _createOperation(),
+                  onPressed: () => onPressed(),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: const [
@@ -173,9 +170,10 @@ class _addcontributionState extends State<addcontribution> {
             fontWeight: FontWeight.bold));
   }
 
-  TextField inputRow(
-      String hint, int operationType, TextEditingController _controller) {
+  TextField inputRow(String hint, int operationType,
+      TextEditingController _controller, TextInputType inputType) {
     return TextField(
+        keyboardType: inputType,
         controller: _controller,
         onTap: () {
           operationType == 2 ? _pickDate() : null;
@@ -183,5 +181,22 @@ class _addcontributionState extends State<addcontribution> {
         decoration: InputDecoration.collapsed(
             hintText: '$hint...', hintStyle: const TextStyle(fontSize: 16)),
         style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18));
+  }
+
+  onPressed() {
+    _controller[0].text.isEmpty ||
+            _controller[1].text.isEmpty ||
+            _controller[2].text.isEmpty
+        ? validate = true
+        : validate = false;
+    if (!validate) {
+      _createOperation();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        backgroundColor: Colors.white,
+        content: Text("Все поля должны быть заполнены",
+            style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+      ));
+    }
   }
 }

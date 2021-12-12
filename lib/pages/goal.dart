@@ -7,10 +7,9 @@ import 'package:moneygoals/providers/database.dart';
 import 'package:intl/intl.dart';
 
 class Goalpage extends StatefulWidget {
-  late Goals _goal;
-  Goalpage({Key? key, required Goals goal}) : super(key: key) {
-    _goal = goal;
-  }
+  Goals _goal;
+  bool disabled;
+  Goalpage(this._goal, this.disabled);
 
   @override
   _GoalpageState createState() => _GoalpageState();
@@ -53,6 +52,7 @@ class _GoalpageState extends State<Goalpage> {
               return SafeArea(
                   top: false,
                   child: Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Container(
                         padding: const EdgeInsets.symmetric(vertical: 15),
@@ -97,9 +97,12 @@ class _GoalpageState extends State<Goalpage> {
                               ? imageContainer()
                               : listView(contributions)
                           : imageContainer(),
-                      SizedBox(
-                          height: MediaQuery.of(context).size.height * 0.01),
-                      buttonContainer()
+                      Padding(
+                          child: buttonContainer(
+                              countContribution(contributions),
+                              int.parse(widget._goal.amount),
+                              widget.disabled),
+                          padding: EdgeInsets.symmetric(vertical: 10))
                     ],
                   ));
             }));
@@ -119,7 +122,7 @@ class _GoalpageState extends State<Goalpage> {
         ]));
   }
 
-  ElevatedButton buttonContainer() {
+  ElevatedButton buttonContainer(int amount, int goalAmount, bool disabled) {
     return ElevatedButton(
         style: ElevatedButton.styleFrom(
             primary: const Color(0xFF6261FE),
@@ -127,12 +130,14 @@ class _GoalpageState extends State<Goalpage> {
             shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(15.0))),
         child: const Text('Добавить операцию'),
-        onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) =>
-                        addcontribution(idGoal: widget._goal.id!)))
-            .then((value) => setState(() {})));
+        onPressed: () => disabled
+            ? null
+            : Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => addcontribution(
+                            widget._goal.id!, amount, goalAmount)))
+                .then((value) => setState(() {})));
   }
 
   Container listView(List<Contributions> contributions) {
@@ -185,6 +190,7 @@ class _GoalpageState extends State<Goalpage> {
                   ),
                   SizedBox(width: MediaQuery.of(context).size.width * 0.27),
                   Text(contributions[index].amount,
+                      textAlign: TextAlign.end,
                       style: const TextStyle(
                           fontSize: 15, fontWeight: FontWeight.bold))
                 ],
@@ -223,9 +229,11 @@ class _GoalpageState extends State<Goalpage> {
                     color: Color(0xFFF5F5F9),
                     fontWeight: FontWeight.bold,
                     fontSize: 20)),
-            Text(
-                '${((DateTime.parse(widget._goal.date).difference(DateTime.now()).inDays) / 30).round()} месяцев осталось',
-                style: const TextStyle(color: Color(0xFFF5F5F9)))
+            widget.disabled
+                ? Text('Цель достигнута', style: TextStyle(color: Colors.white))
+                : Text(
+                    '${((DateTime.parse(widget._goal.date).difference(DateTime.now()).inDays) / 30).round()} месяцев осталось',
+                    style: TextStyle(color: Colors.white))
           ],
         ),
       ],
@@ -236,6 +244,7 @@ class _GoalpageState extends State<Goalpage> {
       Goals goals, List<Contributions> _contributions, int goalMoney) {
     return FutureBuilder(builder: (context, AsyncSnapshot snapshot) {
       var contributions = (snapshot.data ?? [] as List).cast<Contributions>();
+      int countContributions = countContribution(_contributions);
       return Column(children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -249,20 +258,22 @@ class _GoalpageState extends State<Goalpage> {
                   animation: true,
                   lineHeight: 13.0,
                   backgroundColor: const Color(0xFFE9EBF1),
-                  animationDuration: 2000,
+                  animationDuration: 1500,
                   center: Text(
-                      '${((countContribution(_contributions) / goalMoney) * 100).toStringAsFixed(3)} %',
+                      '${((countContributions / goalMoney) * 100).toStringAsFixed(3)} %',
                       style: const TextStyle(fontSize: 13)),
-                  percent:
-                      (countContribution(_contributions) / goalMoney).abs(),
-                  restartAnimation: true,
+                  percent: (countContributions / goalMoney).abs() > 1.0
+                      ? 1.0
+                      : (countContributions / goalMoney).toDouble().abs(),
                   linearStrokeCap: LinearStrokeCap.roundAll,
                   progressColor: const Color(0xFF442BEB),
                 )),
           ],
         ),
-        underIndicatorRow(countContribution(_contributions).toString(),
-            NumberFormat.decimalPattern().format(int.parse(goals.amount)))
+        underIndicatorRow(
+            NumberFormat.decimalPattern('ru').format(
+                int.parse(countContribution(_contributions).toString())),
+            NumberFormat.decimalPattern('ru').format(int.parse(goals.amount)))
       ]);
     });
   }
@@ -278,13 +289,6 @@ class _GoalpageState extends State<Goalpage> {
       return 0;
     }
   }
-
-  // DropdownButton _showDropDownMenu() {
-  //   return DropdownButton(icon: Icon(Icons.more_vert_outlined), items: [
-  //     DropdownMenuItem(child: Text('Изменить')),
-  //     DropdownMenuItem(child: Text('Удалить')),
-  //   ]);
-  // }
 
   Row underIndicatorRow(String currentAmount, String goalAmount) {
     return Row(
@@ -311,9 +315,9 @@ class _GoalpageState extends State<Goalpage> {
     Widget continueButton = TextButton(
         child: const Text("Ок"),
         onPressed: () {
-          DBHelper.instance.deleteGoal(goalID);
-          Navigator.pop(context);
-          Navigator.pop(context);
+          DBHelper.instance.deleteGoal(goalID).whenComplete(() {
+            Navigator.popUntil(context, ModalRoute.withName('/home'));
+          });
         });
 
     AlertDialog alert = AlertDialog(

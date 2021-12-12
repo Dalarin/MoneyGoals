@@ -14,11 +14,10 @@ class addgoal extends StatefulWidget {
 class _addgoalState extends State<addgoal> {
   final List<TextEditingController> _controller =
       List.generate(4, (i) => TextEditingController());
+  bool validate = false;
 
   @override
   Widget build(BuildContext context) {
-    print(MaterialLocalizations.of(context));
-
     return Scaffold(
       backgroundColor: Color(0xFFE9EBF1),
       appBar: AppBar(
@@ -36,7 +35,7 @@ class _addgoalState extends State<addgoal> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Padding(
-                  child: Text('Давайте создадим\n вашу цель!',
+                  child: Text('Давайте создадим\nвашу цель!',
                       style:
                           TextStyle(fontWeight: FontWeight.bold, fontSize: 25)),
                   padding: EdgeInsets.symmetric(vertical: 25, horizontal: 15)),
@@ -56,19 +55,19 @@ class _addgoalState extends State<addgoal> {
                           children: [
                             inputRowName('Название цели'),
                             inputRow("Введите название цели", 0, _controller[0],
-                                false),
+                                false, TextInputType.text),
                             const SizedBox(height: 40),
                             inputRowName('Сумма цели'),
-                            inputRow(
-                                'Введите сумму цели', 0, _controller[1], false),
+                            inputRow('Введите сумму цели', 0, _controller[1],
+                                false, TextInputType.number),
                             const SizedBox(height: 40),
                             inputRowName('Дата достижения цели'),
                             inputRow('Выберите дату достижения цели', 2,
-                                _controller[2], true),
+                                _controller[2], true, TextInputType.none),
                             const SizedBox(height: 40),
                             inputRowName('Иконка цели'),
-                            inputRow(
-                                'Выберите иконку', 3, _controller[3], true),
+                            inputRow('Выберите иконку', 3, _controller[3], true,
+                                TextInputType.none),
                           ],
                         ))),
                 buttonContainer()
@@ -86,10 +85,6 @@ class _addgoalState extends State<addgoal> {
         initialDate: DateTime.now(),
         firstDate: DateTime(2018),
         lastDate: DateTime(2045),
-        fieldHintText: 'Выберите дату',
-        helpText: 'Выберите дату',
-        cancelText: 'Отмена',
-        confirmText: 'OK',
         locale: const Locale('ru'));
     if (picked != null) {
       setState(() {
@@ -129,7 +124,7 @@ class _addgoalState extends State<addgoal> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              SizedBox(height: MediaQuery.of(context).size.height * .1),
+              SizedBox(height: MediaQuery.of(context).size.height * .06),
               ElevatedButton(
                   style: ElevatedButton.styleFrom(
                       elevation: 15,
@@ -140,7 +135,7 @@ class _addgoalState extends State<addgoal> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(15.0),
                       )),
-                  onPressed: () => _createGoal(),
+                  onPressed: () => onPressed(),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: const [
@@ -164,9 +159,14 @@ class _addgoalState extends State<addgoal> {
             fontWeight: FontWeight.bold));
   }
 
-  TextField inputRow(String hint, int operationType,
-      TextEditingController _controller, bool _isEditable) {
+  TextField inputRow(
+      String hint,
+      int operationType,
+      TextEditingController _controller,
+      bool _isEditable,
+      TextInputType textInputType) {
     return TextField(
+        keyboardType: textInputType,
         readOnly: _isEditable,
         controller: _controller,
         onTap: () {
@@ -196,5 +196,23 @@ class _addgoalState extends State<addgoal> {
             status: 0))
         .whenComplete(() => Navigator.pop(context));
     // Необходимо внедрить проверку на пустые поля
+  }
+
+  onPressed() {
+    _controller[0].text.isEmpty ||
+            _controller[1].text.isEmpty ||
+            _controller[2].text.isEmpty ||
+            _controller[3].text.isEmpty
+        ? validate = true
+        : validate = false;
+    if (!validate) {
+      _createGoal();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        backgroundColor: Colors.white,
+        content: Text("Все поля должны быть заполнены",
+            style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+      ));
+    }
   }
 }

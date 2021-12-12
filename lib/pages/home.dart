@@ -15,28 +15,37 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> with TickerProviderStateMixin {
+  int _currentIndex = 0;
+  late TabController _tabController;
+
   @override
   void dispose() {
     super.dispose();
     DBHelper.instance.close();
+    _tabController.dispose();
   }
 
-  TabController? _tabController;
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(vsync: this, length: 2);
+  }
+
   @override
   Widget build(BuildContext context) {
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController =
+        TabController(initialIndex: _currentIndex, length: 2, vsync: this);
     return Scaffold(
         bottomNavigationBar: bottomAppBar(),
         floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
         floatingActionButton: FloatingActionButton(
-          onPressed: () {
-            Navigator.push(
-                    context, MaterialPageRoute(builder: (context) => addgoal()))
-                .then((value) => setState(() {}));
-          },
-          child: const Icon(Icons.add),
-          backgroundColor: const Color(0xFF442BEB),
-        ),
+            onPressed: () {
+              Navigator.push(context,
+                      MaterialPageRoute(builder: (context) => addgoal()))
+                  .then((value) => setState(() {}));
+            },
+            child: const Icon(Icons.add),
+            backgroundColor: const Color(0xFF442BEB)),
         backgroundColor: const Color(0xFFE9EBF1),
         body: FutureBuilder(
             future: Future.wait([
@@ -44,75 +53,75 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
               DBHelper.instance.readAllAmountContributionsID()
             ]),
             builder: (context, AsyncSnapshot<List<dynamic>> snapshot) {
-              debugPrint(snapshot.toString());
               if (snapshot.hasData) {
                 var goals = (snapshot.data as List)[0] as List<Goals>;
                 var contributions =
                     (snapshot.data as List)[1] as List<Contributions>;
                 return SafeArea(
-                  child: SingleChildScrollView(
-                    physics: const BouncingScrollPhysics(),
-                    child: Column(
-                      children: [
-                        header(contributions),
-                        goalsRow(),
-                        Container(
-                            height: MediaQuery.of(context).size.height,
-                            width: MediaQuery.of(context).size.width - 45,
-                            child: goals.length != 0
-                                ? ListView.separated(
-                                    physics: const BouncingScrollPhysics(),
-                                    itemCount: goals.length,
-                                    separatorBuilder:
-                                        (BuildContext context, int index) {
-                                      return const SizedBox(height: 15);
-                                    },
-                                    itemBuilder:
-                                        (BuildContext context, int index) {
-                                      return InkWell(
-                                          onTap: () => Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                  builder: (context) =>
-                                                      Goalpage(
-                                                          goal: goals[index]))),
-                                          child: Container(
-                                              height: 135,
-                                              width: MediaQuery.of(context)
-                                                      .size
-                                                      .width -
-                                                  45,
-                                              decoration: BoxDecoration(
-                                                  borderRadius:
-                                                      BorderRadius.circular(20),
-                                                  color: Colors.white),
-                                              child: Container(
-                                                child: Column(
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment.start,
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
-                                                  children: [
-                                                    containerRow(goals[index]),
-                                                    indicatorRow(
-                                                        goals[index],
-                                                        int.parse(goals[index]
-                                                            .amount),
-                                                        contributions),
-                                                  ],
-                                                ),
-                                              )));
-                                    },
-                                  )
-                                : imageContainer()),
-                      ],
-                    ),
-                  ),
-                );
+                    child: SingleChildScrollView(
+                        physics: const BouncingScrollPhysics(),
+                        child: Column(
+                          children: [
+                            header(contributions),
+                            goalsRow(),
+                            Container(
+                                height: MediaQuery.of(context).size.height,
+                                width: MediaQuery.of(context).size.width - 45,
+                                child: goals.length != 0
+                                    ? TabBarView(
+                                        controller: _tabController,
+                                        children: [
+                                            _listView(
+                                                generateListActiveGoals(goals),
+                                                contributions,
+                                                false),
+                                            _listView(
+                                                generateListDeactiveGoals(
+                                                    goals),
+                                                contributions,
+                                                true)
+                                          ])
+                                    : imageContainer()),
+                          ],
+                        )));
               } else {
                 return const Center(child: CircularProgressIndicator());
               }
             }));
+  }
+
+  ListView _listView(
+      List<Goals> goals, List<Contributions> contributions, bool disabled) {
+    return ListView.separated(
+        physics: const BouncingScrollPhysics(),
+        itemCount: goals.length,
+        separatorBuilder: (BuildContext context, int index) {
+          return const SizedBox(height: 15);
+        },
+        itemBuilder: (BuildContext context, int index) {
+          return InkWell(
+              onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => Goalpage(goals[index], disabled))),
+              child: Container(
+                  height: 135,
+                  width: MediaQuery.of(context).size.width - 45,
+                  decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20),
+                      color: Colors.white),
+                  child: Container(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        containerRow(goals[index]),
+                        indicatorRow(goals[index],
+                            int.parse(goals[index].amount), contributions),
+                      ],
+                    ),
+                  )));
+        });
   }
 
   int countContribution(List<Contributions> contributions) {
@@ -169,9 +178,18 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
         .toList();
   }
 
+  List<Goals> generateListActiveGoals(List<Goals> goal) {
+    return goal.where((element) => element.status == 0).toList();
+  }
+
+  List<Goals> generateListDeactiveGoals(List<Goals> goal) {
+    return goal.where((element) => element.status == 1).toList();
+  }
+
   Column indicatorRow(
       Goals goals, int goalMoney, List<Contributions> _contributions) {
     List<Contributions> _subContributions = generateList(_contributions, goals);
+    int countContributions = countContribution(_subContributions);
     return Column(children: [
       Row(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -185,20 +203,23 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                 animation: true,
                 lineHeight: 13.0,
                 backgroundColor: const Color(0xFFE9EBF1),
-                animationDuration: 2000,
+                animationDuration: 1500,
                 center: Text(
-                    '${((countContribution(_subContributions) / goalMoney) * 100).toStringAsFixed(3)} %',
+                    '${((countContributions / goalMoney) * 100).toStringAsFixed(3)} %',
                     style: const TextStyle(fontSize: 13)),
-                percent:
-                    (countContribution(_subContributions) / goalMoney).abs(),
-                restartAnimation: true,
+                percent: (countContributions / goalMoney).abs() > 1.0
+                    ? 1.0
+                    : (countContributions / goalMoney).toDouble().abs(),
+                restartAnimation: false,
                 linearStrokeCap: LinearStrokeCap.roundAll,
                 progressColor: const Color(0xFF442BEB),
               )),
         ],
       ),
-      underIndicatorRow(countContribution(_subContributions).toString(),
-          NumberFormat.decimalPattern().format(int.parse(goals.amount)))
+      underIndicatorRow(
+          NumberFormat.decimalPattern('ru').format(
+              int.parse(countContribution(_subContributions).toString())),
+          NumberFormat.decimalPattern('ru').format(int.parse(goals.amount)))
     ]);
   }
 
@@ -243,9 +264,12 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
             Text(goals.title,
                 style:
                     const TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
-            Text(
-                '${((DateTime.parse(goals.date).difference(DateTime.now()).inDays) / 30).round()} месяцев осталось',
-                style: TextStyle(color: Colors.grey[550]))
+            goals.status == 1
+                ? Text('Цель достигнута',
+                    style: TextStyle(color: Colors.grey[550]))
+                : Text(
+                    '${((DateTime.parse(goals.date).difference(DateTime.now()).inDays) / 30).round()} месяцев осталось',
+                    style: TextStyle(color: Colors.grey[550]))
           ],
         ),
       ],
@@ -265,6 +289,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
           Padding(
               padding: const EdgeInsets.only(left: 85),
               child: TabBar(
+                  controller: _tabController,
+                  onTap: (value) => _currentIndex = value,
                   indicatorColor: const Color(0xFF442BEB),
                   indicatorWeight: 3.5,
                   labelStyle: const TextStyle(fontWeight: FontWeight.bold),
@@ -273,8 +299,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                   unselectedLabelColor: Colors.grey,
                   isScrollable: true,
                   padding: EdgeInsets.zero,
-                  controller: _tabController,
-                  tabs: const [Tab(text: 'Все'), Tab(text: 'Выполнено')])),
+                  tabs: [Tab(text: 'Все'), Tab(text: 'Выполнено')])),
         ],
       ),
     );
