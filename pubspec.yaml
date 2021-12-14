@@ -34,6 +34,7 @@ dependencies:
   percent_indicator: ^3.4.0
   sqflite: ^2.0.0+4
   path: any
+  shared_preferences: ^2.0.11
 
   flutter_localizations:
     sdk: flutter
@@ -63,6 +64,7 @@ flutter:
   uses-material-design: true
 
   assets:
+    - assets/
     - assets/nothing.png
     - assets/avatar.png
     - assets/congratulations.png

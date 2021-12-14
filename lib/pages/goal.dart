@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:moneygoals/models/contributions.dart';
 import 'package:moneygoals/models/goals.dart';
 import 'package:moneygoals/pages/addcontribution.dart';
+import 'package:moneygoals/providers/constants.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 import 'package:moneygoals/providers/database.dart';
 import 'package:intl/intl.dart';
@@ -19,7 +20,7 @@ class _GoalpageState extends State<Goalpage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        backgroundColor: const Color(0xFFE9EBF1),
+        backgroundColor: constant.backgroundColor,
         appBar: AppBar(
           actions: [
             PopupMenuButton(
@@ -148,7 +149,7 @@ class _GoalpageState extends State<Goalpage> {
           itemCount: contributions.length,
           itemBuilder: (BuildContext context, int index) {
             return Container(
-              height: MediaQuery.of(context).size.height * 0.1,
+              height: MediaQuery.of(context).size.height * 0.09,
               width: (MediaQuery.of(context).size.width * 0.37) / 3,
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
@@ -175,7 +176,7 @@ class _GoalpageState extends State<Goalpage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Container(
-                          width: MediaQuery.of(context).size.width * .35,
+                          width: MediaQuery.of(context).size.width * .45,
                           child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -188,7 +189,7 @@ class _GoalpageState extends State<Goalpage> {
                               ])),
                     ],
                   ),
-                  SizedBox(width: MediaQuery.of(context).size.width * 0.27),
+                  SizedBox(width: MediaQuery.of(context).size.width * 0.17),
                   Text(contributions[index].amount,
                       textAlign: TextAlign.end,
                       style: const TextStyle(
@@ -217,7 +218,7 @@ class _GoalpageState extends State<Goalpage> {
                       fontFamily: 'LineAwesomeIcons',
                       fontPackage: 'flutter_iconpicker'),
                   size: 40,
-                  color: const Color(0xFF442BEB)),
+                  color: constant.buttonColor),
             ),
             padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 25)),
         Column(
@@ -257,7 +258,7 @@ class _GoalpageState extends State<Goalpage> {
                   width: MediaQuery.of(context).size.width - 94,
                   animation: true,
                   lineHeight: 13.0,
-                  backgroundColor: const Color(0xFFE9EBF1),
+                  backgroundColor: constant.backgroundColor,
                   animationDuration: 1500,
                   center: Text(
                       '${((countContributions / goalMoney) * 100).toStringAsFixed(3)} %',
@@ -266,7 +267,7 @@ class _GoalpageState extends State<Goalpage> {
                       ? 1.0
                       : (countContributions / goalMoney).toDouble().abs(),
                   linearStrokeCap: LinearStrokeCap.roundAll,
-                  progressColor: const Color(0xFF442BEB),
+                  progressColor: constant.buttonColor,
                 )),
           ],
         ),

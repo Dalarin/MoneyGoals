@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:moneygoals/pages/goal.dart';
 import 'package:moneygoals/models/contributions.dart';
+import 'package:moneygoals/providers/constants.dart';
+
 import 'addgoal.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 import 'package:moneygoals/models/goals.dart';
 import 'package:moneygoals/providers/database.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Home extends StatefulWidget {
   const Home({Key? key}) : super(key: key);
@@ -29,6 +32,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
   void initState() {
     super.initState();
     _tabController = TabController(vsync: this, length: 2);
+    _loadAvatar();
   }
 
   @override
@@ -45,8 +49,8 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                   .then((value) => setState(() {}));
             },
             child: const Icon(Icons.add),
-            backgroundColor: const Color(0xFF442BEB)),
-        backgroundColor: const Color(0xFFE9EBF1),
+            backgroundColor: constant.buttonColor),
+        backgroundColor: constant.backgroundColor,
         body: FutureBuilder(
             future: Future.wait([
               DBHelper.instance.readAllGoals(),
@@ -67,7 +71,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                             Container(
                                 height: MediaQuery.of(context).size.height,
                                 width: MediaQuery.of(context).size.width - 45,
-                                child: goals.length != 0
+                                child: goals != null
                                     ? TabBarView(
                                         controller: _tabController,
                                         children: [
@@ -150,25 +154,45 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
         ]));
   }
 
-  BottomAppBar bottomAppBar() {
-    return BottomAppBar(
-      shape: const CircularNotchedRectangle(),
-      color: Theme.of(context).primaryColor.withAlpha(255),
-      elevation: 0,
-      child: BottomNavigationBar(
-        showSelectedLabels: false,
-        showUnselectedLabels: false,
-        currentIndex: 0,
-        selectedItemColor: const Color(0xFF442BEB),
-        elevation: 15.0,
-        items: const [
-          BottomNavigationBarItem(
-              icon: Icon(Icons.schedule_outlined, size: 35), label: 'Home'),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.person_outline, size: 35), label: 'Edit')
-        ],
+  ClipRRect bottomAppBar() {
+    return ClipRRect(
+      borderRadius: const BorderRadius.only(
+        topLeft: Radius.circular(25),
+        topRight: Radius.circular(25),
+      ),
+      child: BottomAppBar(
+        shape: const CircularNotchedRectangle(),
+        color: Theme.of(context).primaryColor.withAlpha(255),
+        elevation: 5,
+        child: BottomNavigationBar(
+          showSelectedLabels: false,
+          showUnselectedLabels: false,
+          currentIndex: 0,
+          selectedItemColor: constant.buttonColor,
+          elevation: 15.0,
+          items: const [
+            BottomNavigationBarItem(
+                icon: Icon(Icons.schedule_outlined, size: 35), label: 'Home'),
+            BottomNavigationBarItem(
+                icon: Icon(Icons.person_outline, size: 35), label: 'Edit')
+          ],
+        ),
       ),
     );
+  }
+
+  void _setAvatar(String avatar) async {
+    final prefs = await SharedPreferences.getInstance();
+    prefs.setString('avatar', avatar);
+    setState(() {
+      constant.chosenImage = avatar;
+    });
+    Navigator.pop(context);
+  }
+
+  void _loadAvatar() async {
+    final prefs = await SharedPreferences.getInstance();
+    constant.chosenImage = prefs.getString('avatar') ?? 'assets/avatar.png';
   }
 
   List<Contributions> generateList(
@@ -202,7 +226,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                 width: MediaQuery.of(context).size.width - 94,
                 animation: true,
                 lineHeight: 13.0,
-                backgroundColor: const Color(0xFFE9EBF1),
+                backgroundColor: constant.backgroundColor,
                 animationDuration: 1500,
                 center: Text(
                     '${((countContributions / goalMoney) * 100).toStringAsFixed(3)} %',
@@ -212,7 +236,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                     : (countContributions / goalMoney).toDouble().abs(),
                 restartAnimation: false,
                 linearStrokeCap: LinearStrokeCap.roundAll,
-                progressColor: const Color(0xFF442BEB),
+                progressColor: constant.buttonColor,
               )),
         ],
       ),
@@ -254,7 +278,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                       fontFamily: 'LineAwesomeIcons',
                       fontPackage: 'flutter_iconpicker'),
                   size: 40,
-                  color: const Color(0xFF442BEB)),
+                  color: constant.buttonColor),
             ),
             padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 25)),
         Column(
@@ -291,7 +315,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
               child: TabBar(
                   controller: _tabController,
                   onTap: (value) => _currentIndex = value,
-                  indicatorColor: const Color(0xFF442BEB),
+                  indicatorColor: constant.buttonColor,
                   indicatorWeight: 3.5,
                   labelStyle: const TextStyle(fontWeight: FontWeight.bold),
                   indicatorSize: TabBarIndicatorSize.label,
@@ -299,9 +323,17 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                   unselectedLabelColor: Colors.grey,
                   isScrollable: true,
                   padding: EdgeInsets.zero,
-                  tabs: [Tab(text: 'Все'), Tab(text: 'Выполнено')])),
+                  tabs: const [Tab(text: 'Все'), Tab(text: 'Выполнено')])),
         ],
       ),
+    );
+  }
+
+  CircleAvatar circleAvatar(String image) {
+    return CircleAvatar(
+      backgroundImage: AssetImage(image),
+      backgroundColor: constant.backgroundColor,
+      radius: 45,
     );
   }
 
@@ -319,7 +351,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
             Row(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                const Icon(Icons.euro, color: Color(0xFF442BEB)),
+                Icon(Icons.euro, color: constant.buttonColor),
                 const SizedBox(width: 5),
                 Text(countContribution(contributions).toString(),
                     style: const TextStyle(
@@ -327,15 +359,64 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
               ],
             )
           ]),
-          Column(children: const [
-            CircleAvatar(
-              backgroundImage: AssetImage('assets/avatar.png'),
-              backgroundColor: Color(0xFFE9EBF1),
-              radius: 45,
-            )
+          Column(children: [
+            InkWell(
+              onTap: _showAlertDialog,
+              child: circleAvatar(constant.chosenImage),
+            ),
           ]),
         ],
       ),
+    );
+  }
+
+  _showAlertDialog() {
+    return showDialog(
+        context: context,
+        barrierDismissible: false, // user must tap button!
+        builder: (context) {
+          return AlertDialog(
+            backgroundColor: constant.backgroundColor,
+            insetPadding:
+                const EdgeInsets.symmetric(horizontal: 0, vertical: 50),
+            shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.all(Radius.circular(3))),
+            contentPadding: const EdgeInsets.all(10.0),
+            title: const Text(
+              'Выберите необходимый аватар',
+              style:
+                  TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+            ),
+            content: _gridView(),
+            actions: <Widget>[
+              IconButton(
+                  splashColor: Colors.green,
+                  icon: const Icon(
+                    Icons.cancel,
+                    color: Colors.blue,
+                  ),
+                  onPressed: () => Navigator.of(context).pop())
+            ],
+          );
+        });
+  }
+
+  Container _gridView() {
+    return Container(
+      width: MediaQuery.of(context).size.width * .7,
+      height: MediaQuery.of(context).size.height * .7,
+      child: GridView.builder(
+          itemCount: constant.avatars.length,
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            mainAxisSpacing: 4.0,
+            childAspectRatio: MediaQuery.of(context).size.width /
+                (MediaQuery.of(context).size.height / 2),
+            crossAxisSpacing: 4.0,
+          ),
+          itemBuilder: (context, index) => InkResponse(
+              onTap: () => _setAvatar(constant.avatars[index]),
+              child: circleAvatar(constant.avatars[index]))),
     );
   }
 }

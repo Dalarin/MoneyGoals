@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:moneygoals/models/goals.dart';
+import 'package:moneygoals/providers/constants.dart';
 import 'package:moneygoals/providers/database.dart';
 
 class congratulations extends StatefulWidget {
@@ -14,7 +15,7 @@ class _congratulationsState extends State<congratulations> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        backgroundColor: const Color(0xFFE9EBF1),
+        backgroundColor: constant.backgroundColor,
         body: SafeArea(
             child: Center(
                 child: Column(

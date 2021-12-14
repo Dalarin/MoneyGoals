@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_iconpicker/flutter_iconpicker.dart';
 import 'package:moneygoals/models/goals.dart';
+import 'package:moneygoals/providers/constants.dart';
 import 'package:moneygoals/providers/database.dart';
 import 'package:intl/intl.dart';
 
@@ -19,10 +20,10 @@ class _addgoalState extends State<addgoal> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFE9EBF1),
+      backgroundColor: constant.backgroundColor,
       appBar: AppBar(
         iconTheme: const IconThemeData(color: Colors.black),
-        backgroundColor: Color(0xFFE9EBF1),
+        backgroundColor: constant.backgroundColor,
         elevation: 0.0,
         title: const Text('Шаг 2', style: TextStyle(color: Color(0xFF897BF2))),
         centerTitle: true,
@@ -101,8 +102,8 @@ class _addgoalState extends State<addgoal> {
   _pickIcon() async {
     IconData? icon = await FlutterIconPicker.showIconPicker(context,
         iconPackMode: IconPack.lineAwesomeIcons,
-        iconColor: Color(0xFF442BEB),
-        backgroundColor: Color(0xFFE9EBF1),
+        iconColor: constant.buttonColor,
+        backgroundColor: constant.backgroundColor,
         title: const Text('Выберите иконку'),
         closeChild: const Text('Закрыть'),
         searchHintText: 'Поиск');
@@ -118,9 +119,9 @@ class _addgoalState extends State<addgoal> {
         child: Container(
           width: MediaQuery.of(context).size.width,
           height: MediaQuery.of(context).size.height,
-          decoration: const BoxDecoration(
-              borderRadius: BorderRadius.only(topLeft: Radius.circular(50)),
-              color: Color(0xFF442BEB)),
+          decoration: BoxDecoration(
+              borderRadius: const BorderRadius.only(topLeft: Radius.circular(50)),
+              color: constant.buttonColor),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [

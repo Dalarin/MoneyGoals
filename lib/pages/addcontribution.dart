@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:moneygoals/models/contributions.dart';
 import 'package:moneygoals/pages/congratulations.dart';
+import 'package:moneygoals/providers/constants.dart';
 import 'package:moneygoals/providers/database.dart';
 import 'package:intl/intl.dart';
 
@@ -29,15 +30,14 @@ class _addcontributionState extends State<addcontribution> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFE9EBF1),
+      backgroundColor: constant.backgroundColor,
       appBar: AppBar(
-        iconTheme: const IconThemeData(color: Colors.black),
-        elevation: 0,
-        centerTitle: true,
-        backgroundColor: const Color(0xFFE9EBF1),
-        title: const Text('Добавление операции',
-            style: TextStyle(color: Color(0xFF897BF2))),
-      ),
+          iconTheme: const IconThemeData(color: Colors.black),
+          elevation: 0,
+          centerTitle: true,
+          backgroundColor: constant.backgroundColor,
+          title: Text('Добавление операции',
+              style: TextStyle(color: constant.subButtonColor))),
       body: SafeArea(
         bottom: false,
         child: SingleChildScrollView(
@@ -129,9 +129,10 @@ class _addcontributionState extends State<addcontribution> {
         child: Container(
           width: MediaQuery.of(context).size.width,
           height: MediaQuery.of(context).size.height,
-          decoration: const BoxDecoration(
-              borderRadius: BorderRadius.only(topLeft: Radius.circular(50)),
-              color: Color(0xFF442BEB)),
+          decoration: BoxDecoration(
+              borderRadius:
+                  const BorderRadius.only(topLeft: Radius.circular(50)),
+              color: constant.buttonColor),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
