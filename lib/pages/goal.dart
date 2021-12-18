@@ -6,6 +6,7 @@ import 'package:moneygoals/providers/constants.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 import 'package:moneygoals/providers/database.dart';
 import 'package:intl/intl.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class Goalpage extends StatefulWidget {
   Goals _goal;
@@ -17,99 +18,136 @@ class Goalpage extends StatefulWidget {
 }
 
 class _GoalpageState extends State<Goalpage> {
+  List<int> values = [];
+  bool indexSelected = false;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
         backgroundColor: constant.backgroundColor,
-        appBar: AppBar(
-          actions: [
-            PopupMenuButton(
-                icon: const Icon(Icons.more_vert_outlined),
-                itemBuilder: (_) => <PopupMenuItem<String>>[
-                      const PopupMenuItem<String>(
-                        child: Text('Удалить'),
-                        value: 'Delete',
-                      ),
-                      const PopupMenuItem<String>(
-                          child: Text('Редактировать'), value: 'Edit'),
-                    ],
-                onSelected: (String value) {
-                  value == 'Delete'
-                      ? showAlertDialog(context, widget._goal.id!)
-                      : null;
-                }),
-          ],
-          iconTheme: const IconThemeData(color: Colors.black),
-          backgroundColor: const Color(0xFFFC9C9F),
-          elevation: 0.0,
-          title: const Text('Ваша цель', style: TextStyle(color: Colors.black)),
-          centerTitle: true,
-        ),
-        body: FutureBuilder(
-            future: DBHelper.instance.readAllContributions(widget._goal.id!),
-            builder: (context, AsyncSnapshot<List<dynamic>> snapshot) {
-              var contributions =
-                  (snapshot.data as List) as List<Contributions>;
-              return SafeArea(
-                  top: false,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(vertical: 15),
-                        width: MediaQuery.of(context).size.width,
-                        height: MediaQuery.of(context).size.height * .25,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFFFC9C9F),
-                          borderRadius: BorderRadius.only(
-                              bottomLeft: Radius.circular(35),
-                              bottomRight: Radius.circular(35)),
-                        ),
-                        child: Column(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              Container(
-                                  height: 135,
-                                  width: MediaQuery.of(context).size.width - 45,
-                                  decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(20),
-                                      color: const Color(0xFF272231)),
-                                  child: Container(
-                                      child: Column(children: [
-                                    containerRow(),
-                                    indicatorRow(
-                                        widget._goal,
-                                        contributions,
-                                        int.parse(widget._goal
-                                            .amount)), // <----- здесь проблема
-                                  ])))
-                            ]),
-                      ),
-                      const SizedBox(height: 15),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: const [Text('Операции с целью')],
-                        ),
-                      ),
-                      contributions != null
-                          ? contributions.length == 0
-                              ? imageContainer()
-                              : listView(contributions)
-                          : imageContainer(),
-                      Padding(
-                          child: buttonContainer(
-                              countContribution(contributions),
-                              int.parse(widget._goal.amount),
-                              widget.disabled),
-                          padding: EdgeInsets.symmetric(vertical: 10))
-                    ],
-                  ));
-            }));
+        appBar: indexSelected ? changedAppBar() : appBar(),
+        body: content());
   }
 
-  Container imageContainer() {
+  AppBar changedAppBar() {
+    return AppBar(
+      automaticallyImplyLeading: false,
+      iconTheme: const IconThemeData(color: Colors.black),
+      backgroundColor: const Color(0xFFFC9C9F),
+      elevation: 0.0,
+      leading: IconButton(
+          icon: const Icon(Icons.close),
+          onPressed: () => setState(() {
+                values.clear();
+                indexSelected = false;
+              })),
+      actions: [
+        IconButton(
+            onPressed: () => showAlertDialogContributions(),
+            icon: const FaIcon(FontAwesomeIcons.trashAlt))
+      ],
+    );
+  }
+
+  _deleteContributions() {
+    values.forEach((element) => DBHelper.instance.deleteContribution(element));
+    setState(() {
+      indexSelected = false;
+    });
+    Navigator.pop(context);
+  }
+
+  AppBar appBar() {
+    return AppBar(
+      actions: [
+        PopupMenuButton(
+          icon: const Icon(Icons.more_vert_outlined),
+          itemBuilder: (_) => <PopupMenuItem<String>>[
+            const PopupMenuItem<String>(
+              child: Text('Удалить'),
+              value: 'Delete',
+            ),
+            const PopupMenuItem<String>(
+                child: Text('Редактировать'), value: 'Edit')
+          ],
+          onSelected: (String value) {
+            value == 'Delete'
+                ? showAlertDialogGoal(context, widget._goal.id!)
+                : null;
+          },
+        ),
+      ],
+      iconTheme: const IconThemeData(color: Colors.black),
+      backgroundColor: const Color(0xFFFC9C9F),
+      elevation: 0.0,
+      title: const Text('Ваша цель', style: TextStyle(color: Colors.black)),
+      centerTitle: true,
+    );
+  }
+
+  Widget content() {
+    return FutureBuilder(
+        future: DBHelper.instance.readAllContributions(widget._goal.id!),
+        builder: (context, AsyncSnapshot<List<dynamic>> snapshot) {
+          var contributions = (snapshot.data as List) as List<Contributions>;
+          return SafeArea(
+              top: false,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(vertical: 15),
+                    width: MediaQuery.of(context).size.width,
+                    height: MediaQuery.of(context).size.height * .25,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFFC9C9F),
+                      borderRadius: BorderRadius.only(
+                          bottomLeft: Radius.circular(35),
+                          bottomRight: Radius.circular(35)),
+                    ),
+                    child: Column(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          Container(
+                              height: 135,
+                              width: MediaQuery.of(context).size.width - 45,
+                              decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(20),
+                                  color: const Color(0xFF272231)),
+                              child: Container(
+                                  child: Column(children: [
+                                containerRow(),
+                                indicatorRow(
+                                    widget._goal,
+                                    contributions,
+                                    int.parse(widget._goal
+                                        .amount)), // <----- здесь проблема
+                              ])))
+                        ]),
+                  ),
+                  const SizedBox(height: 15),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: const [Text('Операции с целью')],
+                    ),
+                  ),
+                  contributions != null
+                      ? contributions.length == 0
+                          ? imageContainer()
+                          : listView(contributions)
+                      : imageContainer(),
+                  Padding(
+                      child: buttonContainer(countContribution(contributions),
+                          int.parse(widget._goal.amount), widget.disabled),
+                      padding: const EdgeInsets.symmetric(vertical: 10))
+                ],
+              ));
+        });
+  }
+
+  Widget imageContainer() {
     return Container(
         width: MediaQuery.of(context).size.width,
         height: MediaQuery.of(context).size.height * 0.47,
@@ -123,7 +161,7 @@ class _GoalpageState extends State<Goalpage> {
         ]));
   }
 
-  ElevatedButton buttonContainer(int amount, int goalAmount, bool disabled) {
+  Widget buttonContainer(int amount, int goalAmount, bool disabled) {
     return ElevatedButton(
         style: ElevatedButton.styleFrom(
             primary: const Color(0xFF6261FE),
@@ -141,67 +179,96 @@ class _GoalpageState extends State<Goalpage> {
                 .then((value) => setState(() {})));
   }
 
-  Container listView(List<Contributions> contributions) {
+  Widget listView(List<Contributions> contributions) {
     return Container(
         width: MediaQuery.of(context).size.width,
         height: MediaQuery.of(context).size.height * 0.47,
         child: ListView.builder(
-          itemCount: contributions.length,
-          itemBuilder: (BuildContext context, int index) {
-            return Container(
-              height: MediaQuery.of(context).size.height * 0.09,
-              width: (MediaQuery.of(context).size.width * 0.37) / 3,
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Padding(
-                      padding: EdgeInsets.symmetric(
-                          horizontal: MediaQuery.of(context).size.width * 0.04),
-                      child: Container(
-                          alignment: Alignment.center,
-                          height: 50,
-                          width: 50,
-                          decoration: BoxDecoration(
-                            borderRadius:
-                                const BorderRadius.all(Radius.circular(50)),
-                            color: int.parse(contributions[index].amount) < 0
-                                ? const Color(0xFFFC9C9F)
-                                : const Color(0xFFADADF9),
-                          ),
-                          child: int.parse(contributions[index].amount) < 0
-                              ? const Icon(Icons.money_off)
-                              : const Icon(Icons.attach_money_outlined))),
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                          width: MediaQuery.of(context).size.width * .45,
-                          child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(contributions[index].comment,
-                                    style: const TextStyle(
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.bold)),
-                                Text(contributions[index].date,
-                                    style: const TextStyle(fontSize: 15))
-                              ])),
-                    ],
-                  ),
-                  SizedBox(width: MediaQuery.of(context).size.width * 0.17),
-                  Text(contributions[index].amount,
-                      textAlign: TextAlign.end,
-                      style: const TextStyle(
-                          fontSize: 15, fontWeight: FontWeight.bold))
-                ],
-              ),
-            );
-          },
-        ));
+            shrinkWrap: true,
+            itemCount: contributions.length,
+            itemBuilder: (BuildContext context, int index) => InkWell(
+                onLongPress: () => _onLongPress(contributions[index]),
+                child: listViewCard(contributions, index))));
   }
 
-  Row containerRow() {
+  _onLongPress(Contributions contributions) {
+    setState(() {
+      !values.contains(contributions.id)
+          ? values.add(contributions.id!)
+          : values.remove(contributions.id);
+      indexSelected = values.isNotEmpty ? true : false;
+    });
+  }
+
+  Widget listViewCard(List<Contributions> contributions, int index) {
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.096,
+      width: (MediaQuery.of(context).size.width * 0.37) / 3,
+      color: values.contains(contributions[index].id)
+          ? const Color(0xFFCDCFD5)
+          : constant.backgroundColor,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Container(
+            child: Row(
+              children: [
+                Padding(
+                    padding: EdgeInsets.symmetric(
+                        horizontal: MediaQuery.of(context).size.width * 0.04),
+                    child: Container(
+                        alignment: Alignment.center,
+                        height: 50,
+                        width: 50,
+                        decoration: BoxDecoration(
+                          borderRadius:
+                              const BorderRadius.all(Radius.circular(50)),
+                          color: int.parse(contributions[index].amount) < 0
+                              ? const Color(0xFFFC9C9F)
+                              : const Color(0xFFADADF9),
+                        ),
+                        child: int.parse(contributions[index].amount) < 0
+                            ? const Icon(Icons.money_off)
+                            : const Icon(Icons.attach_money_outlined))),
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                        width: MediaQuery.of(context).size.width * .45,
+                        child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(contributions[index].comment,
+                                  style: const TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.bold)),
+                              Text(contributions[index].date,
+                                  style: const TextStyle(fontSize: 15))
+                            ])),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 25),
+                    child: Text(contributions[index].amount,
+                        textAlign: TextAlign.end,
+                        style: const TextStyle(
+                            fontSize: 15, fontWeight: FontWeight.bold)))
+              ])
+        ],
+      ),
+    );
+  }
+
+  Widget containerRow() {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -231,20 +298,20 @@ class _GoalpageState extends State<Goalpage> {
                     fontWeight: FontWeight.bold,
                     fontSize: 20)),
             widget.disabled
-                ? Text('Цель достигнута', style: TextStyle(color: Colors.white))
+                ? const Text('Цель достигнута',
+                    style: TextStyle(color: Colors.white))
                 : Text(
                     '${((DateTime.parse(widget._goal.date).difference(DateTime.now()).inDays) / 30).round()} месяцев осталось',
-                    style: TextStyle(color: Colors.white))
+                    style: const TextStyle(color: Colors.white))
           ],
         ),
       ],
     );
   }
 
-  FutureBuilder indicatorRow(
+  Widget indicatorRow(
       Goals goals, List<Contributions> _contributions, int goalMoney) {
     return FutureBuilder(builder: (context, AsyncSnapshot snapshot) {
-      var contributions = (snapshot.data ?? [] as List).cast<Contributions>();
       int countContributions = countContribution(_contributions);
       return Column(children: [
         Row(
@@ -291,7 +358,7 @@ class _GoalpageState extends State<Goalpage> {
     }
   }
 
-  Row underIndicatorRow(String currentAmount, String goalAmount) {
+  Widget underIndicatorRow(String currentAmount, String goalAmount) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -307,29 +374,31 @@ class _GoalpageState extends State<Goalpage> {
     );
   }
 
-  showAlertDialog(BuildContext context, int goalID) {
+  showAlertDialogContributions() {
     Widget cancelButton = TextButton(
-        child: const Text("Отменить"),
-        onPressed: () {
-          Navigator.pop(context);
-        });
+        child: const Text("Отменить"), onPressed: () => Navigator.pop(context));
+    Widget continueButton = TextButton(
+        child: const Text("Ок"), onPressed: () => _deleteContributions());
+    AlertDialog alert = AlertDialog(
+        title: const Text("Удаление"),
+        content:
+            Text('Вы уверены, что хотите удалить ${values.length} операций?'),
+        actions: [cancelButton, continueButton]);
+    showDialog(context: context, builder: (BuildContext context) => alert);
+  }
+
+  showAlertDialogGoal(BuildContext context, int goalID) {
+    Widget cancelButton = TextButton(
+        child: const Text("Отменить"), onPressed: () => Navigator.pop(context));
     Widget continueButton = TextButton(
         child: const Text("Ок"),
-        onPressed: () {
-          DBHelper.instance.deleteGoal(goalID).whenComplete(() {
-            Navigator.popUntil(context, ModalRoute.withName('/home'));
-          });
-        });
-
+        onPressed: () => DBHelper.instance.deleteGoal(goalID).whenComplete(() {
+              Navigator.popUntil(context, ModalRoute.withName('/home'));
+            }));
     AlertDialog alert = AlertDialog(
-      title: const Text("Удаление"),
-      content: const Text("Вы уверены, что хотите удалить цель?"),
-      actions: [cancelButton, continueButton],
-    );
-    showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return alert;
-        });
+        title: const Text("Удаление"),
+        content: const Text("Вы уверены, что хотите удалить цель?"),
+        actions: [cancelButton, continueButton]);
+    showDialog(context: context, builder: (BuildContext context) => alert);
   }
 }

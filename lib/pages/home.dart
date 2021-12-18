@@ -43,89 +43,89 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
         bottomNavigationBar: bottomAppBar(),
         floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
         floatingActionButton: FloatingActionButton(
-            onPressed: () {
-              Navigator.push(context,
-                      MaterialPageRoute(builder: (context) => addgoal()))
-                  .then((value) => setState(() {}));
-            },
+            onPressed: () => Navigator.push(
+                    context, MaterialPageRoute(builder: (context) => addgoal()))
+                .then((value) => setState(() {})),
             child: const Icon(Icons.add),
             backgroundColor: constant.buttonColor),
         backgroundColor: constant.backgroundColor,
-        body: FutureBuilder(
-            future: Future.wait([
-              DBHelper.instance.readAllGoals(),
-              DBHelper.instance.readAllAmountContributionsID()
-            ]),
-            builder: (context, AsyncSnapshot<List<dynamic>> snapshot) {
-              if (snapshot.hasData) {
-                var goals = (snapshot.data as List)[0] as List<Goals>;
-                var contributions =
-                    (snapshot.data as List)[1] as List<Contributions>;
-                return SafeArea(
-                    child: SingleChildScrollView(
-                        physics: const BouncingScrollPhysics(),
-                        child: Column(
-                          children: [
-                            header(contributions),
-                            goalsRow(),
-                            Container(
-                                height: MediaQuery.of(context).size.height,
-                                width: MediaQuery.of(context).size.width - 45,
-                                child: goals != null
-                                    ? TabBarView(
-                                        controller: _tabController,
-                                        children: [
-                                            _listView(
-                                                generateListActiveGoals(goals),
-                                                contributions,
-                                                false),
-                                            _listView(
-                                                generateListDeactiveGoals(
-                                                    goals),
-                                                contributions,
-                                                true)
-                                          ])
-                                    : imageContainer()),
-                          ],
-                        )));
-              } else {
-                return const Center(child: CircularProgressIndicator());
-              }
-            }));
+        body: pageContent());
   }
 
-  ListView _listView(
+  Widget pageContent() {
+    return FutureBuilder(
+      future: Future.wait([
+        DBHelper.instance.readAllGoals(),
+        DBHelper.instance.readAllAmountContributionsID()
+      ]),
+      builder: (context, AsyncSnapshot<List<dynamic>> snapshot) {
+        if (snapshot.hasData) {
+          var goals = (snapshot.data as List)[0] as List<Goals>;
+          var contributions = (snapshot.data as List)[1] as List<Contributions>;
+          return SafeArea(
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: Column(
+                children: [
+                  header(contributions),
+                  goalsRow(),
+                  Container(
+                      height: MediaQuery.of(context).size.height,
+                      width: MediaQuery.of(context).size.width - 45,
+                      child: goals != null
+                          ? TabBarView(controller: _tabController, children: [
+                              _listView(generateListActiveGoals(goals),
+                                  contributions, false),
+                              _listView(generateListDeactiveGoals(goals),
+                                  contributions, true)
+                            ])
+                          : imageContainer()),
+                ],
+              ),
+            ),
+          );
+        } else {
+          return const Center(child: CircularProgressIndicator());
+        }
+      },
+    );
+  }
+
+  Widget _listView(
       List<Goals> goals, List<Contributions> contributions, bool disabled) {
     return ListView.separated(
         physics: const BouncingScrollPhysics(),
         itemCount: goals.length,
-        separatorBuilder: (BuildContext context, int index) {
-          return const SizedBox(height: 15);
-        },
-        itemBuilder: (BuildContext context, int index) {
-          return InkWell(
-              onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => Goalpage(goals[index], disabled))),
-              child: Container(
-                  height: 135,
-                  width: MediaQuery.of(context).size.width - 45,
-                  decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20),
-                      color: Colors.white),
-                  child: Container(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        containerRow(goals[index]),
-                        indicatorRow(goals[index],
-                            int.parse(goals[index].amount), contributions),
-                      ],
-                    ),
-                  )));
-        });
+        separatorBuilder: (BuildContext context, int index) =>
+            const SizedBox(height: 15),
+        itemBuilder: (BuildContext context, int index) =>
+            listViewCard(goals, contributions, index, disabled));
+  }
+
+  Widget listViewCard(List<Goals> goals, List<Contributions> contributions,
+      int index, bool disabled) {
+    return InkWell(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (context) => Goalpage(goals[index], disabled)),
+      ),
+      child: Container(
+        height: 135,
+        width: MediaQuery.of(context).size.width - 45,
+        decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20), color: Colors.white),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            containerRow(goals[index]),
+            indicatorRow(
+                goals[index], int.parse(goals[index].amount), contributions),
+          ],
+        ),
+      ),
+    );
   }
 
   int countContribution(List<Contributions> contributions) {
@@ -140,28 +140,31 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
     }
   }
 
-  Container imageContainer() {
+  Widget imageContainer() {
     return Container(
-        width: MediaQuery.of(context).size.width,
-        height: MediaQuery.of(context).size.height * 0.47,
-        child: Column(children: [
+      width: MediaQuery.of(context).size.width,
+      height: MediaQuery.of(context).size.height * 0.47,
+      child: Column(
+        children: [
           Image.asset('assets/nothing.png'),
           const Text('Ничего нет...',
               style: TextStyle(
                   fontWeight: FontWeight.w500,
                   fontSize: 17,
                   fontStyle: FontStyle.italic))
-        ]));
+        ],
+      ),
+    );
   }
 
-  ClipRRect bottomAppBar() {
+  Widget bottomAppBar() {
     return ClipRRect(
       borderRadius: const BorderRadius.only(
         topLeft: Radius.circular(25),
         topRight: Radius.circular(25),
       ),
       child: BottomAppBar(
-        shape: const CircularNotchedRectangle(),
+        shape: CircularNotchedRectangle(),
         color: Theme.of(context).primaryColor.withAlpha(255),
         elevation: 5,
         child: BottomNavigationBar(
@@ -210,15 +213,16 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
     return goal.where((element) => element.status == 1).toList();
   }
 
-  Column indicatorRow(
+  Widget indicatorRow(
       Goals goals, int goalMoney, List<Contributions> _contributions) {
     List<Contributions> _subContributions = generateList(_contributions, goals);
     int countContributions = countContribution(_subContributions);
-    return Column(children: [
-      Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
               alignment: Alignment.center,
               height: 15,
               width: 300,
@@ -237,17 +241,19 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                 restartAnimation: false,
                 linearStrokeCap: LinearStrokeCap.roundAll,
                 progressColor: constant.buttonColor,
-              )),
-        ],
-      ),
-      underIndicatorRow(
-          NumberFormat.decimalPattern('ru').format(
-              int.parse(countContribution(_subContributions).toString())),
-          NumberFormat.decimalPattern('ru').format(int.parse(goals.amount)))
-    ]);
+              ),
+            ),
+          ],
+        ),
+        underIndicatorRow(
+            NumberFormat.decimalPattern('ru').format(
+                int.parse(countContribution(_subContributions).toString())),
+            NumberFormat.decimalPattern('ru').format(int.parse(goals.amount)))
+      ],
+    );
   }
 
-  Row underIndicatorRow(String currentAmount, String goalAmount) {
+  Widget underIndicatorRow(String currentAmount, String goalAmount) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -261,7 +267,7 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
     );
   }
 
-  Row containerRow(Goals goals) {
+  Widget containerRow(Goals goals) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -281,26 +287,29 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                   color: constant.buttonColor),
             ),
             padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 25)),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 25),
-            Text(goals.title,
-                style:
-                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
-            goals.status == 1
-                ? Text('Цель достигнута',
-                    style: TextStyle(color: Colors.grey[550]))
-                : Text(
-                    '${((DateTime.parse(goals.date).difference(DateTime.now()).inDays) / 30).round()} месяцев осталось',
-                    style: TextStyle(color: Colors.grey[550]))
-          ],
-        ),
+        targetDate(goals)
       ],
     );
   }
 
-  Container goalsRow() {
+  Widget targetDate(Goals goals) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 25),
+        Text(goals.title,
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+        goals.status == 1
+            ? Text('Цель достигнута', style: TextStyle(color: Colors.grey[550]))
+            : Text(
+                '${((DateTime.parse(goals.date).difference(DateTime.now()).inDays) / 30).round()} месяцев осталось',
+                style: TextStyle(color: Colors.grey[550]),
+              )
+      ],
+    );
+  }
+
+  Widget goalsRow() {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 35),
       child: Row(
@@ -310,26 +319,28 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
           Text('Ваши цели',
               style: TextStyle(
                   color: Colors.grey[600], fontWeight: FontWeight.bold)),
-          Padding(
-              padding: const EdgeInsets.only(left: 85),
-              child: TabBar(
-                  controller: _tabController,
-                  onTap: (value) => _currentIndex = value,
-                  indicatorColor: constant.buttonColor,
-                  indicatorWeight: 3.5,
-                  labelStyle: const TextStyle(fontWeight: FontWeight.bold),
-                  indicatorSize: TabBarIndicatorSize.label,
-                  labelColor: Colors.black,
-                  unselectedLabelColor: Colors.grey,
-                  isScrollable: true,
-                  padding: EdgeInsets.zero,
-                  tabs: const [Tab(text: 'Все'), Tab(text: 'Выполнено')])),
+          Padding(padding: const EdgeInsets.only(left: 85), child: tabBar()),
         ],
       ),
     );
   }
 
-  CircleAvatar circleAvatar(String image) {
+  Widget tabBar() {
+    return TabBar(
+        controller: _tabController,
+        onTap: (value) => _currentIndex = value,
+        indicatorColor: constant.buttonColor,
+        indicatorWeight: 3.5,
+        labelStyle: const TextStyle(fontWeight: FontWeight.bold),
+        indicatorSize: TabBarIndicatorSize.label,
+        labelColor: Colors.black,
+        unselectedLabelColor: Colors.grey,
+        isScrollable: true,
+        padding: EdgeInsets.zero,
+        tabs: const [Tab(text: 'Все'), Tab(text: 'Выполнено')]);
+  }
+
+  Widget circleAvatar(String image) {
     return CircleAvatar(
       backgroundImage: AssetImage(image),
       backgroundColor: constant.backgroundColor,
@@ -337,34 +348,42 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
     );
   }
 
-  Container header(List<Contributions> contributions) {
+  Widget header(List<Contributions> contributions) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 55, horizontal: 15),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Column(children: [
-            Text("Вы уже накопили:",
+          Column(
+            children: [
+              Text(
+                "Вы уже накопили:",
                 style: TextStyle(
-                    color: Colors.grey[600], fontWeight: FontWeight.bold)),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Icon(Icons.euro, color: constant.buttonColor),
-                const SizedBox(width: 5),
-                Text(countContribution(contributions).toString(),
+                    color: Colors.grey[600], fontWeight: FontWeight.bold),
+              ),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Icon(Icons.euro, color: constant.buttonColor),
+                  const SizedBox(width: 5),
+                  Text(
+                    countContribution(contributions).toString(),
                     style: const TextStyle(
-                        fontWeight: FontWeight.bold, fontSize: 45))
-              ],
-            )
-          ]),
-          Column(children: [
-            InkWell(
-              onTap: _showAlertDialog,
-              child: circleAvatar(constant.chosenImage),
-            ),
-          ]),
+                        fontWeight: FontWeight.bold, fontSize: 45),
+                  )
+                ],
+              )
+            ],
+          ),
+          Column(
+            children: [
+              InkWell(
+                onTap: _showAlertDialog,
+                child: circleAvatar(constant.chosenImage),
+              ),
+            ],
+          ),
         ],
       ),
     );
@@ -372,51 +391,48 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
 
   _showAlertDialog() {
     return showDialog(
-        context: context,
-        barrierDismissible: false, // user must tap button!
-        builder: (context) {
-          return AlertDialog(
-            backgroundColor: constant.backgroundColor,
-            insetPadding:
-                const EdgeInsets.symmetric(horizontal: 0, vertical: 50),
-            shape: const RoundedRectangleBorder(
-                borderRadius: BorderRadius.all(Radius.circular(3))),
-            contentPadding: const EdgeInsets.all(10.0),
-            title: const Text(
-              'Выберите необходимый аватар',
-              style:
-                  TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
-            ),
-            content: _gridView(),
-            actions: <Widget>[
-              IconButton(
-                  splashColor: Colors.green,
-                  icon: const Icon(
-                    Icons.cancel,
-                    color: Colors.blue,
-                  ),
-                  onPressed: () => Navigator.of(context).pop())
-            ],
-          );
-        });
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: constant.backgroundColor,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 0, vertical: 50),
+          shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(3))),
+          contentPadding: const EdgeInsets.all(10.0),
+          title: const Text(
+            'Выберите необходимый аватар',
+            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+          ),
+          content: _gridView(),
+          actions: <Widget>[
+            IconButton(
+                icon: const Icon(Icons.cancel, color: Colors.blue),
+                onPressed: () => Navigator.of(context).pop())
+          ],
+        );
+      },
+    );
   }
 
-  Container _gridView() {
+  Widget _gridView() {
     return Container(
       width: MediaQuery.of(context).size.width * .7,
       height: MediaQuery.of(context).size.height * .7,
       child: GridView.builder(
-          itemCount: constant.avatars.length,
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            mainAxisSpacing: 4.0,
-            childAspectRatio: MediaQuery.of(context).size.width /
-                (MediaQuery.of(context).size.height / 2),
-            crossAxisSpacing: 4.0,
-          ),
-          itemBuilder: (context, index) => InkResponse(
-              onTap: () => _setAvatar(constant.avatars[index]),
-              child: circleAvatar(constant.avatars[index]))),
+        itemCount: constant.avatars.length,
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          mainAxisSpacing: 4.0,
+          childAspectRatio: MediaQuery.of(context).size.width /
+              (MediaQuery.of(context).size.height / 2),
+          crossAxisSpacing: 4.0,
+        ),
+        itemBuilder: (context, index) => InkResponse(
+          onTap: () => _setAvatar(constant.avatars[index]),
+          child: circleAvatar(constant.avatars[index]),
+        ),
+      ),
     );
   }
 }
